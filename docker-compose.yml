@@ -1,6 +1,6 @@
 # ============================================================
 # edge-tts-openai Docker Compose 编排文件
-# 镜像：edge-tts-openai:0.0.1（内置静态 ffmpeg）
+# 镜像：yvtou/edge-tts-openai:0.0.1（Docker Hub）
 # 使用：修改 .env -> docker compose up -d
 # ============================================================
 
@@ -9,8 +9,8 @@ services:
     # 容器在宿主机上的名称
     container_name: edge-tts-openai
 
-    # 使用已导入的本地镜像
-    image: edge-tts-openai:0.0.1
+    # 使用 Docker Hub 镜像
+    image: yvtou/edge-tts-openai:0.0.1
 
     # 容器退出后自动重启
     restart: unless-stopped

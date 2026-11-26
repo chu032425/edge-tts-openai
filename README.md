@@ -61,13 +61,11 @@ edge-tts/
 
 ## 快速部署
 
-### 方式一：本地源码构建镜像
-
-在项目根目录执行：
+### 方式一：从 Docker Hub 拉取镜像（推荐）
 
 ```bash
-# 1. 构建镜像
-docker build -t edge-tts-openai:0.0.1 .
+# 1. 拉取镜像
+docker pull yvtou/edge-tts-openai:0.0.1
 
 # 2. 修改配置文件
 # 编辑 .env，至少修改 API_KEY 和 PORT
@@ -79,21 +77,37 @@ docker compose up -d
 curl http://127.0.0.1:5050/health
 ```
 
-### 方式二：加载已经打包好的镜像
-
-如果已经导出了镜像归档文件，可以先加载再启动：
+### 方式二：本地源码构建镜像
 
 ```bash
-# 加载镜像
+# 1. 构建并打上 Docker Hub 标签
+docker build -t edge-tts-openai:0.0.1 .
+docker tag edge-tts-openai:0.0.1 yvtou/edge-tts-openai:0.0.1
+
+# 2. 修改配置文件
+# 编辑 .env，至少修改 API_KEY 和 PORT
+
+# 3. 启动
+docker compose up -d
+
+# 4. 检查健康状态
+curl http://127.0.0.1:5050/health
+```
+
+### 方式三：加载已经打包好的镜像
+
+```bash
+# 加载镜像并打上 Docker Hub 标签
 docker load -i edge-tts-openai-0.0.1.tar.gz
+docker tag edge-tts-openai:0.0.1 yvtou/edge-tts-openai:0.0.1
 
 # 修改 .env 后启动
 docker compose up -d
 ```
 
-> 默认 Compose 使用的镜像名是 `edge-tts-openai:0.0.1`。
+> 默认 Compose 使用的镜像名是 `yvtou/edge-tts-openai:0.0.1`。
 
-### 方式三：不使用 Docker，直接运行
+### 方式四：不使用 Docker，直接运行
 
 ```bash
 cd edge-tts
