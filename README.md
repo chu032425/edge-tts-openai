@@ -47,6 +47,7 @@ edge-tts/
 ├── changelog/
 │   └── 0.0.1.md
 ├── images/
+├── deploy.sh
 ├── docker-compose.yml
 ├── Dockerfile
 ├── LICENSE
@@ -60,6 +61,19 @@ edge-tts/
 - 服务器需要能访问微软 Edge TTS 服务
 
 ## 快速部署
+
+### 一键部署（推荐）
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/chu032425/edge-tts-openai/main/deploy.sh | bash
+```
+
+脚本会：
+
+- 创建 `edge-tts-openai` 目录
+- 下载 `docker-compose.yml` 和 `.env`
+- 提示输入 `API_KEY`
+- 自动执行 `docker compose up -d`
 
 ### 方式一：从 Docker Hub 拉取镜像（推荐）
 
