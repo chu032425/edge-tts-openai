@@ -1,0 +1,101 @@
+# ============================================================
+# edge-tts-openai Docker Compose 编排文件
+# 镜像：edge-tts-openai:0.0.1（内置静态 ffmpeg）
+# 使用：修改 .env -> docker compose up -d
+# ============================================================
+
+services:
+  edge-tts-openai:
+    # 容器在宿主机上的名称
+    container_name: edge-tts-openai
+
+    # 使用已导入的本地镜像
+    image: edge-tts-openai:0.0.1
+
+    # 容器退出后自动重启
+    restart: unless-stopped
+
+    # 端口映射：宿主机端口(可用 .env 的 PORT 修改) : 容器内固定 5050
+    ports:
+      - '${PORT:-5050}:5050'
+
+    # 运行环境变量：${变量:-默认值} 表示 .env 未设置时使用默认值
+    environment:
+      # 鉴权密钥：调用接口时使用 Authorization: Bearer <此密钥>
+      API_KEY: ${API_KEY:?请在 .env 中设置 API_KEY}
+
+      # 对外暴露的模型 ID 列表：逗号分隔；这些只是别名，实际都走同一个 edge-tts 合成引擎
+      TTS_MODELS: ${TTS_MODELS:-tts-1}
+
+      # 容器内部监听端口（固定 5050，与上面的端口映射保持一致）
+      PORT: '5050'
+
+      # 默认音色：OpenAI 别名或任意 Edge 音色名
+      DEFAULT_VOICE: ${DEFAULT_VOICE:-zh-CN-XiaoxiaoNeural}
+
+      # 默认输出格式：mp3 / wav / opus / aac / flac / pcm
+      DEFAULT_RESPONSE_FORMAT: ${DEFAULT_RESPONSE_FORMAT:-mp3}
+
+      # 默认语速：范围 0.25 ~ 4.0
+      DEFAULT_SPEED: ${DEFAULT_SPEED:-1.0}
+
+      # 默认语言：用于 /v1/voices 音色列表过滤
+      DEFAULT_LANGUAGE: ${DEFAULT_LANGUAGE:-zh-CN}
+
+      # 是否强制鉴权：True=必须带 API_KEY，False=允许匿名调用
+      REQUIRE_API_KEY: ${REQUIRE_API_KEY:-True}
+
+      # 是否关闭文本清洗：True=关闭 Markdown/emoji 清洗
+      REMOVE_FILTER: ${REMOVE_FILTER:-False}
+
+      # 是否启用 ElevenLabs / Azure 兼容端点
+      EXPAND_API: ${EXPAND_API:-True}
+
+      # 是否输出详细错误日志（排障时建议 True）
+      DETAILED_ERROR_LOGGING: ${DETAILED_ERROR_LOGGING:-True}
+
+      # 微软侧瞬态失败(NoAudioReceived/403/超时)的重试次数
+      TTS_RETRY_ATTEMPTS: ${TTS_RETRY_ATTEMPTS:-3}
+
+      # 重试退避基数（秒）：1s -> 2s -> 4s 指数增长，含抖动
+      TTS_RETRY_BASE_DELAY: ${TTS_RETRY_BASE_DELAY:-1.0}
+
+      # 音色列表内存缓存时长（秒）
+      TTS_VOICES_CACHE_TTL: ${TTS_VOICES_CACHE_TTL:-300}
+
+      # 每秒允许的合成请求数：0 = 不限速
+      TTS_RATE_LIMIT: ${TTS_RATE_LIMIT:-1}
+
+      # 令牌桶突发容量：允许瞬时多放几个请求
+      TTS_RATE_BURST: ${TTS_RATE_BURST:-2}
+
+      # 最多排队等待的请求数：超出立即返回 429
+      TTS_MAX_QUEUE: ${TTS_MAX_QUEUE:-10}
+
+      # 排队等待令牌的最长秒数：超时返回 429
+      TTS_QUEUE_TIMEOUT: ${TTS_QUEUE_TIMEOUT:-30}
+
+      # 连续失败多少次后熔断：0 = 关闭熔断
+      TTS_BREAKER_THRESHOLD: ${TTS_BREAKER_THRESHOLD:-5}
+
+      # 熔断后冷却秒数：期间直接返回 503，不再请求微软
+      TTS_BREAKER_COOLDOWN: ${TTS_BREAKER_COOLDOWN:-60}
+
+      # 临时文件清理周期（秒）：0 = 只在启动时清理一次
+      TTS_TEMP_CLEANUP_INTERVAL: ${TTS_TEMP_CLEANUP_INTERVAL:-600}
+
+      # 只清理超过该年龄（秒）的临时文件
+      TTS_TEMP_MAX_AGE: ${TTS_TEMP_MAX_AGE:-3600}
+
+    # /tmp 使用内存盘：临时音频不落盘，更安全
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=256m
+
+    # 健康检查：每 30 秒请求一次 /health
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5050/health', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+
